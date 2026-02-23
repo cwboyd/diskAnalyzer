@@ -22,16 +22,6 @@ class Integer
   end
 end
 
-class String
-  def each_byte_with_index
-    index = 0
-    self.each_byte do |byte|
-      yield byte, index
-      index += 1
-    end
-  end
-end
-
 class File
 
   def each_block_with_index(buffer, blocksize = BLOCKSIZE)
@@ -62,6 +52,7 @@ File.open(FILENAME, "rb") do |file|
   buffer = String.new(capacity: BLOCKSIZE)
 
   file.each_block_with_index(buffer) do |block, index, block_index|
+    offset = 0
 
     if (block_index % EVERY_N_BLKS == 0) then
       end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -71,10 +62,11 @@ File.open(FILENAME, "rb") do |file|
       STDOUT.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} MB/s)"
     end
 
-    block.each_byte_with_index do |byte, offset|
+    block.each_byte do |byte|
       next if byte == 0
       STDOUT.puts if offset == 0
       STDOUT.puts "Found non-NULL byte #{byte} at index #{index}"
+      offset += 1
     end
   end
 end
