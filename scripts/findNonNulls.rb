@@ -5,6 +5,7 @@ FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
 #BLOCKSIZE = 4096 * 4096
 BLOCKSIZE = 128 * 1024
 last_non_null_index = -1
+EVERY_N_BLKS = 10
 
 class Array
   def all_null?
@@ -22,40 +23,18 @@ class Integer
 end
 
 class File
-  EVERY_N_BLKS = 1
 
-  def each_block_byte_with_index(blocksize = BLOCKSIZE)
+  def each_block_with_index(buffer, blocksize = BLOCKSIZE)
     index = 0
-    blk_index = 0
+    block_index = 0
     size = File.size(FILENAME)
-    start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    buffer = String.new(capacity: BLOCKSIZE)
 
     while index < size do
-      #start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       block = self.sysread(blocksize, buffer)
-      blk_index += 1
       return index if block.nil?
-
-      if blk_index == EVERY_N_BLKS
-        blk_index = 0
-        end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-        elapsed = end_time - start_time
-        rate = (index.to_f + block.size.to_f) / elapsed.to_f
-        #rate = rate / 1_000_0000
-        rate = rate.to_i
-        STDOUT.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} MB/s)"
-      end
-
-      offset = 0
+      yield block, index, block_index
       index += block.length
-      block.each_byte do |byte|
-        next if byte == 0
-        STDOUT.puts if offset == 0
-        STDOUT.puts "Found non-NULL byte #{byte} at index #{index}"
-        index += 1
-        offset += 1
-      end
+      block_index += 1
     end
   end
 
@@ -69,8 +48,26 @@ class File
 end
 
 File.open(FILENAME, "rb") do |file|
-  #file.each_byte_with_index do |byte, index, offset|
-  file.each_block_byte_with_index do |byte, index, offset|
+  start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  buffer = String.new(capacity: BLOCKSIZE)
+
+  file.each_block_with_index(buffer) do |block, index, block_index|
+    offset = 0
+
+    if (block_index % EVERY_N_BLKS == 0) then
+      end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      elapsed = end_time - start_time
+      rate = (index.to_f + block.size.to_f) / elapsed.to_f
+      rate = rate.to_i
+      STDOUT.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} MB/s)"
+    end
+
+    block.each_byte do |byte|
+      next if byte == 0
+      STDOUT.puts if offset == 0
+      STDOUT.puts "Found non-NULL byte #{byte} at index #{index}"
+      offset += 1
+    end
   end
 end
 
