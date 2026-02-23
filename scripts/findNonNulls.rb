@@ -22,7 +22,7 @@ class Integer
 end
 
 class File
-  EVERY_N_BLKS = 100
+  EVERY_N_BLKS = 1
 
   def each_block_byte_with_index(blocksize = BLOCKSIZE)
     index = 0
