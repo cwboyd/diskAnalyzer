@@ -100,3 +100,9 @@ File.open(FILENAME, "rb") do |file|
   end
 end
 
+elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - START_TIME
+rate = FILENAME_SIZE.to_f / elapsed.to_f
+rate = rate.to_i.to_comma_s
+STDERR.print "\rFinished! Total read was #{FILENAME_SIZE.to_comma_s} bytes (rate = #{rate} B/s, progress = 100%)"
+STDERR.puts
+
