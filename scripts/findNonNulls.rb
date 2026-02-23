@@ -19,6 +19,13 @@ class String
   def all_null?
     return ALL_NULL_REGEXP.match?(self)
   end
+  def each_byte_with_index(starting_index)
+    offset = 0
+    self.each_byte do |byte|
+      yield byte, starting_index + offset
+      offset += 1
+    end
+  end
 end
 
 class Integer
@@ -67,20 +74,20 @@ START_TIME = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
 File.open(FILENAME, "rb") do |file|
   File.open(OFFSETS_FILENAME, "w") do |offsets_file|
-    file.each_block_with_index do |block, index, block_index|
+    file.each_block_with_index do |block, starting_index, block_index|
 
       if (block_index % EVERY_N_BLKS == 0) then
         elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - START_TIME
-        rate = (index.to_f + block.size.to_f) / elapsed.to_f
+        rate = (starting_index.to_f + block.size.to_f) / elapsed.to_f
         rate = rate.to_i
-        STDERR.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} B/s)"
+        STDERR.print "\rRead block at index #{starting_index.to_comma_s} (rate = #{rate.to_comma_s} B/s)"
       end
 
       next if block.all_null?
 
-      block.each_byte do |byte|
+      block.each_byte_with_index(starting_index) do |byte, index|
         next if byte == 0
-        offsets_file.puts "Found non-NULL byte #{byte} at index #{index}"
+        offsets_file.puts "Found non-NULL byte #{byte} (0x#{byte.to_s(16).upcase}) at index #{index}"
       end
     end
   end
