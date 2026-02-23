@@ -18,7 +18,7 @@ end
 
 class String
   def all_null?
-    return self !~ /[^\0]/
+    return /^[\0]*$/.match?(self)
   end
 end
 
