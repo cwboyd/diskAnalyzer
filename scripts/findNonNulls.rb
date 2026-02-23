@@ -17,8 +17,9 @@ class Array
 end
 
 class String
+  ALL_NULL_REGEXP = /^[\0]*$/
   def all_null?
-    return /^[\0]*$/.match?(self)
+    return ALL_NULL_REGEXP.match?(self)
   end
 end
 
