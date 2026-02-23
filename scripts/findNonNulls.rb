@@ -3,6 +3,7 @@
 FILENAME = "/mnt/images/run1/recup_dir.56/recover02.bin"
 #BLOCKSIZE = 4096 * 1024
 BLOCKSIZE = 4096 * 4096
+#BLOCKSIZE = 4096
 last_non_null_index = -1
 
 class Array
@@ -25,10 +26,11 @@ class File
     index = 0
     size = File.size(FILENAME)
     start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    buffer = String.new(capacity: BLOCKSIZE)
 
     while index < size do
       #start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      block = self.read(blocksize)
+      block = self.sysread(blocksize, buffer)
       end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       elapsed = end_time - start_time
       return index if block.nil?
