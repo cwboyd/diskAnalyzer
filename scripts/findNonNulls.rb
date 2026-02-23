@@ -49,7 +49,7 @@ class File
 
       offset = 0
       block.each_byte do |byte|
-        yield byte, index, offset
+#        yield byte, index, offset
         index += 1
         offset += 1
       end
