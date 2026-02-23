@@ -16,6 +16,12 @@ class Array
   end
 end
 
+class String
+  def all_null?
+    return self !~ /[^\0]/
+  end
+end
+
 class Integer
   def to_comma_s
     return to_s.gsub(/\B(?=(...)*\b)/, ',')
@@ -63,7 +69,7 @@ File.open(FILENAME, "rb") do |file|
       STDOUT.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} MB/s)"
     end
 
-next
+    next if block.all_null?
 
     block.each_byte do |byte|
       next if byte == 0
