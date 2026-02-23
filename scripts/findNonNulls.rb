@@ -1,6 +1,4 @@
 
-FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
-#FILENAME = "/mnt/images/run1/recup_dir.56/recover02.bin"
 #BLOCKSIZE = 4096 * 1024
 #BLOCKSIZE = 4096 * 4096
 BLOCKSIZE = 128 * 1024
@@ -56,29 +54,35 @@ class File
   end
 end
 
+
+FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
+#FILENAME = "/mnt/images/run1/recup_dir.56/recover02.bin"
+DIRNAME = FILENAME.split('/')[0..-2].join('/')
+BASEFILENAME = FILENAME.split('/')[-1]
+OFFSETS_FILENAME = [DIRNAME, '/', 'offsets-', BASEFILENAME].join('')
+
+
+START_TIME = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+
 File.open(FILENAME, "rb") do |file|
-  start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  File.open(OFFSETS_FILENAME, "w") do |offsets_file|
+    file.each_block_with_index do |block, index, block_index|
 
-  file.each_block_with_index do |block, index, block_index|
-    offset = 0
+      if (block_index % EVERY_N_BLKS == 0) then
+        elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - START_TIME
+        rate = (index.to_f + block.size.to_f) / elapsed.to_f
+        rate = rate.to_i
+        STDERR.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} B/s)"
+      end
 
-    if (block_index % EVERY_N_BLKS == 0) then
-      end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      elapsed = end_time - start_time
-      rate = (index.to_f + block.size.to_f) / elapsed.to_f
-      rate = rate.to_i
-      STDOUT.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} MB/s)"
-    end
+      next if block.all_null?
 
-    next if block.all_null?
-
-    block.each_byte do |byte|
-      next if byte == 0
-      STDOUT.puts if offset == 0
-      STDOUT.puts "Found non-NULL byte #{byte} at index #{index}"
-      offset += 1
+      block.each_byte do |byte|
+        next if byte == 0
+        offsets_file.puts "Found non-NULL byte #{byte} at index #{index}"
+      end
     end
   end
 end
-
 
