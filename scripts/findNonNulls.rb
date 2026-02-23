@@ -49,11 +49,13 @@ class File
 
       offset = 0
       index += block.length
-#      block.each_byte do |byte|
-#        yield byte, index, offset
-#        index += 1
-#        offset += 1
-#      end
+      block.each_byte do |byte|
+        next if byte == 0
+        STDOUT.puts if offset == 0
+        STDOUT.puts "Found non-NULL byte #{byte} at index #{index}"
+        index += 1
+        offset += 1
+      end
     end
   end
 
@@ -69,10 +71,6 @@ end
 File.open(FILENAME, "rb") do |file|
   #file.each_byte_with_index do |byte, index, offset|
   file.each_block_byte_with_index do |byte, index, offset|
-    next if byte == 0
-    puts if offset == 0
-    last_non_null_index = index
-    puts "Found non-NULL byte #{byte} at index #{index}"
   end
 end
 
