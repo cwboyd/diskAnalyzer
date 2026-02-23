@@ -24,13 +24,15 @@ end
 
 class File
 
-  def each_block_with_index(buffer, blocksize = BLOCKSIZE)
+  def each_block_with_index(blocksize = BLOCKSIZE)
     index = 0
     block_index = 0
     size = File.size(FILENAME)
+    buffer = String.new(capacity: BLOCKSIZE)
 
     while index < size do
       block = self.sysread(blocksize, buffer)
+      #block = self.read(blocksize, buffer)
       return index if block.nil?
       yield block, index, block_index
       index += block.length
@@ -49,9 +51,8 @@ end
 
 File.open(FILENAME, "rb") do |file|
   start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  buffer = String.new(capacity: BLOCKSIZE)
 
-  file.each_block_with_index(buffer) do |block, index, block_index|
+  file.each_block_with_index do |block, index, block_index|
     offset = 0
 
     if (block_index % EVERY_N_BLKS == 0) then
@@ -61,6 +62,8 @@ File.open(FILENAME, "rb") do |file|
       rate = rate.to_i
       STDOUT.print "\rRead block at index #{index.to_comma_s} (rate = #{rate.to_comma_s} MB/s)"
     end
+
+next
 
     block.each_byte do |byte|
       next if byte == 0
