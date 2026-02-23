@@ -62,12 +62,17 @@ class File
 end
 
 
-FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
+#FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
 #FILENAME = "/mnt/images/run1/recup_dir.56/recover02.bin"
+FILENAME = ARGV[0]
+FILENAME_SIZE = File.size(FILENAME)
 DIRNAME = FILENAME.split('/')[0..-2].join('/')
 BASEFILENAME = FILENAME.split('/')[-1]
 OFFSETS_FILENAME = [DIRNAME, '/', 'offsets-', BASEFILENAME].join('')
 
+STDERR.puts("Analyzing: #{FILENAME} (size: #{FILENAME_SIZE.to_comma_s})")
+STDERR.puts("Writing offsets file: #{OFFSETS_FILENAME}")
+STDERR.puts
 
 START_TIME = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
@@ -79,8 +84,10 @@ File.open(FILENAME, "rb") do |file|
       if (block_index % EVERY_N_BLKS == 0) then
         elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - START_TIME
         rate = (starting_index.to_f + block.size.to_f) / elapsed.to_f
-        rate = rate.to_i
-        STDERR.print "\rRead block at index #{starting_index.to_comma_s} (rate = #{rate.to_comma_s} B/s)"
+        rate = rate.to_i.to_comma_s
+        percent = 100.0 * starting_index.to_f / FILENAME_SIZE.to_f 
+        percent = percent.to_i
+        STDERR.print "\rRead block at index #{starting_index.to_comma_s} (rate = #{rate} B/s, progress = #{percent}%)"
       end
 
       next if block.all_null?
