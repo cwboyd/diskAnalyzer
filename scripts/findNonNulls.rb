@@ -1,6 +1,6 @@
 
-#FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
-FILENAME = "/mnt/images/run1/recup_dir.56/recover02.bin"
+FILENAME = "/mnt/images/run1/recup_dir.56/f277077744.xml"
+#FILENAME = "/mnt/images/run1/recup_dir.56/recover02.bin"
 #BLOCKSIZE = 4096 * 1024
 #BLOCKSIZE = 4096 * 4096
 BLOCKSIZE = 128 * 1024
@@ -48,11 +48,12 @@ class File
       end
 
       offset = 0
-      block.each_byte do |byte|
+      index += block.length
+#      block.each_byte do |byte|
 #        yield byte, index, offset
-        index += 1
-        offset += 1
-      end
+#        index += 1
+#        offset += 1
+#      end
     end
   end
 
